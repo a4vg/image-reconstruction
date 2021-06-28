@@ -1,10 +1,12 @@
+// g++ -w main.cpp matriz.cpp -lGLEW -lGLUT -lGLFW -framework OpenGL  -o tut
+
 #include <iostream>
 #include <cmath>
 
 #ifdef __APPLE__
 #  include <GL/glew.h>
 #  include <GL/freeglut.h>
-#  include <OpenGL/glext.h>
+// #  include <OpenGL/glext.h>
 #else
 #  include <GL/glew.h>
 #  include <GL/freeglut.h>
@@ -12,10 +14,9 @@
 #pragma comment(lib, "glew32.lib") // Compiler directive to include the GLEW library.
 #endif
 
-
-#include <glm\glm.hpp>
-#include <glm\gtc\type_ptr.hpp>
-#include <glm\gtc\matrix_transform.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "Matriz.h"
 #include "Normal.h"
@@ -151,8 +152,8 @@ void setup() {
 
     glEnableClientState(GL_VERTEX_ARRAY); // Enable vertex array.
     glEnable(GL_DEPTH_TEST);
-    CreateShaderProgram("../2.1.basic_lighting.vs","../2.1.basic_lighting.fs", p1_id);
-    //CreateShaderProgram("../2.1.basic_lighting_vertex.vs","../2.1.basic_lighting_vertex.fs", p1_id);
+    CreateShaderProgram("./2.1.basic_lighting.vs", "./2.1.basic_lighting.fs", p1_id);
+    //CreateShaderProgram("./2.1.basic_lighting_vertex.vs", "./2.1.basic_lighting_vertex.fs", p1_id);
     glBindAttribLocation(p1_id, p1_vertex_id, "aPos");
     glBindAttribLocation(p1_id, p1_normal_id, "aNormal");
     p1_projection_id	= glGetUniformLocation(p1_id, "projection");

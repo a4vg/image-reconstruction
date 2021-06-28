@@ -3,7 +3,7 @@
 //
 #include <cmath>
 #include <memory>
-#include "matriz.h"
+#include "Matriz.h"
 
 Matriz::Matriz(const Matriz &m) {
     for (int i = 0; i < 16; i++) {
