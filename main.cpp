@@ -7,6 +7,7 @@
 #  include <GL/glew.h>
 #  include <GL/freeglut.h>
 // #  include <OpenGL/glext.h>
+#  include <GLFW/glfw3.h>
 #else
 #  include <GL/glew.h>
 #  include <GL/freeglut.h>
@@ -20,9 +21,8 @@
 
 #include "Matriz.h"
 #include "Normal.h"
-using namespace std;
 
-
+GLFWwindow* window;
 float cameraX, cameraY, cameraZ;
 float lposx, lposy, lposz;
 float cubeLocX, cubeLocY, cubeLocZ;
@@ -63,8 +63,12 @@ static float normalMatrix[] = {
 };
 
 // NEW: Function to read a shader file.
-char* readShader(const string &aShaderFile) {
+char* readShader(const std::string &aShaderFile) {
   FILE* filePointer = fopen(aShaderFile.c_str(), "rb");
+  if (filePointer == NULL) {
+    std::cout << "Couldn not open file" << "\n";
+    exit(1);
+  }
   char* content;
   long numVal;
 
@@ -78,8 +82,8 @@ char* readShader(const string &aShaderFile) {
   return content;
 }
 
-static void Error(const string &message) {
-  cout << message;
+static void Error(const std::string &message) {
+  std::cout << message;
 }
 
 /* Compila shader */
@@ -113,7 +117,7 @@ static void LinkProgram (GLuint id) {
 }
 
 /* Cria programa de shader */
-static void CreateShaderProgram(const string &vertexShaderFile, const string &fragmentShaderFile, GLuint &p_id) {
+static void CreateShaderProgram(const std::string &vertexShaderFile, const std::string &fragmentShaderFile, GLuint &p_id) {
   char*	vertexShader   = readShader(vertexShaderFile);
   char*	fragmentShader = readShader(fragmentShaderFile);
 
@@ -152,8 +156,8 @@ void setup() {
 
   glEnableClientState(GL_VERTEX_ARRAY); // Enable vertex array.
   glEnable(GL_DEPTH_TEST);
-  CreateShaderProgram("./2.1.basic_lighting.vs", "./2.1.basic_lighting.fs", p1_id);
-  //CreateShaderProgram("./2.1.basic_lighting_vertex.vs", "./2.1.basic_lighting_vertex.fs", p1_id);
+  // CreateShaderProgram("./2.1.basic_lighting.vs", "./2.1.basic_lighting.fs", p1_id);
+  CreateShaderProgram("./2.1.basic_lighting_vertex.vs", "./2.1.basic_lighting_vertex.fs", p1_id);
   glBindAttribLocation(p1_id, p1_vertex_id, "aPos");
   glBindAttribLocation(p1_id, p1_normal_id, "aNormal");
   p1_projection_id	= glGetUniformLocation(p1_id, "projection");
@@ -188,7 +192,7 @@ void setup() {
   }
 
   for (int i=0; i < 12; i++) {
-    cout << tn[i] << " ";
+    std::cout << tn[i] << " ";
   }
   Normal n1, n2, n3, np;
   cpn = 0;
@@ -232,9 +236,9 @@ void setup() {
   prisma_normales[cpn++] = np.z;
 
   //-0.604119 -0.43771 0.665921 0.604119 -0.43771 0.665921 -0.193858 -0.451337 0.871042 -0.252185 0.0579244 0.965944
-  cout << "\nNormales\n";
+  std::cout << "\nNormales\n";
   for (int i=0; i < 12; i++) {
-    cout << prisma_normales[i] << " ";
+    std::cout << prisma_normales[i] << " ";
   }
 
 
@@ -273,12 +277,12 @@ void drawScene() {
   GLboolean transpose = GL_FALSE;
 
   if (imprimir_una_vez) {
-    cout << "\nViewport " << vp[0] << " " << vp[1] << " " << vp[2] << " " << vp[3];
+    std::cout << "\nViewport " << vp[0] << " " << vp[1] << " " << vp[2] << " " << vp[3];
     float pos[] = {4, 0, 0};
     imprimir_una_vez = false;
     glm::vec4 v1(4,0,0, 1);
     glm::vec4 v11 = projection * view * model * v1;
-    cout << "\nv {" << v11[0] << ", "<< v11[1]<< ", " << v11[2]<< ", " << v11[3] << "}\n";
+    std::cout << "\nv {" << v11[0] << ", "<< v11[1]<< ", " << v11[2]<< ", " << v11[3] << "}\n";
   }
 
   glUseProgram(p1_id);
@@ -301,95 +305,140 @@ void drawScene() {
   glUniform3fv(p1_light_color_id, 1, aLightColor);
 
   glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, (const void *) prisma_indices);
-  //glDisableVertexAttribArray(p1_vertex_id);
-  //glDisableVertexAttribArray(p1_normal_id);
+  glDisableVertexAttribArray(p1_vertex_id); //
+  glDisableVertexAttribArray(p1_normal_id);
 
-  glutSwapBuffers();
+  // glutSwapBuffers();
 }
 
 // OpenGL window reshape routine.
-void resize(int w, int h) {
+void resize(GLFWwindow* window, int w, int h) {
   glViewport(0, 0, (GLsizei) w, (GLsizei) h);
 }
 
 // Keyboard input processing routine.
-void keyInput(unsigned char key, int x, int y) {
-  switch(key) {
+void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods) {
+  if(action != GLFW_PRESS) return;
+  switch (key) {
     case 27:
       exit(0);
-    case 'c': cameraZ--;
-      cout << "C " << cameraZ << " ";
+    case GLFW_KEY_M:
+      cameraZ--;
+      std::cout << "Z " << cameraZ << "\n";
       break;
-    case 'C': cameraZ++;
-      cout << "C " << cameraZ << " ";
+    case GLFW_KEY_N:
+      cameraZ++;
+      std::cout << "Z " << cameraZ << "\n";
       break;
-    case 'x':
+    case GLFW_KEY_A:
       Xangle += 1.0;
       if (Xangle > 360.0) Xangle -= 360.0;
       break;
-    case 'X':
+    case GLFW_KEY_D:
       Xangle -= 1.0;
       if (Xangle < 0.0) Xangle += 360.0;
       break;
-    case 'y':
+    case GLFW_KEY_W :
       Yangle += 5.0;
       if (Yangle > 360.0) Yangle -= 360.0;
-      cout << "Y " << Yangle << " ";
+      std::cout << "Y " << Yangle << "\n";
       break;
-    case 'Y':
+    case GLFW_KEY_S:
       Yangle -= 5.0;
       if (Yangle < 0.0) Yangle += 360.0;
       break;
-    case 'z':
+    case GLFW_KEY_E:
       Zangle += 5.0;
       if (Zangle > 360.0) Zangle -= 360.0;
       break;
-    case 'Z':
+    case GLFW_KEY_R:
       Zangle -= 5.0;
       if (Zangle < 0.0) Zangle += 360.0;
       break;
-    case 's': Scale += 0.01;
-      cout << Scale << " ";
+    case GLFW_KEY_P:
+      Scale += 0.01;
+      std::cout << Scale << "\n";
       break;
-    case  'S': Scale -= 0.01;
+    case  GLFW_KEY_O:
+      Scale -= 0.01;
       if (Scale == 0.0) Scale = 0.01;
-      cout << Scale << " ";
+      std::cout << Scale << "\n";
       break;
-    case 'l': lposy -= 0.5; cout << "LPY" << lposy << " "; break;
-    case 'L': lposy += 0.5; cout << "LPY" << lposy << " "; break;
-    case 'p': imprimir_una_vez = true; break;
+    case GLFW_KEY_DOWN:
+      lposy -= 0.5;
+      std::cout << "LPY" << lposy << "\n";
+      break;
+    case GLFW_KEY_UP:
+      lposy += 0.5;
+      std::cout << "LPY" << lposy << "\n";
+      break;
+    case GLFW_KEY_L:
+      imprimir_una_vez = true;
+      break;
     default:
       break;
   }
-  glutPostRedisplay();
 }
 
 
 void printInteraction(void) {
-  cout << "Interaccion:" << endl;
-  cout << "Press x, X, y, Y, z, Z para girar." << endl;
+  std::cout << "Interaction:\n";
+  std::cout << "Scale: [p][o]\n";
+  std::cout << "Rotate:\n\tX axis: [a][d]\n\tY axis: [w][s]\n\tZ axis: [e][r]\n";
+  std::cout << "Move:\n\tX axis: [←][→]\n\tY axis: [↑][↓]\n\tZ axis: [m][n]\n";
 }
 
 // Main routine.
 int main(int argc, char **argv) {
   printInteraction();
-  glutInit(&argc, argv);
 
-  //glutInitContextVersion(4, 3);
-  glutInitContextProfile(GLUT_COMPATIBILITY_PROFILE);
+  // Initialise GLFW
+  if (!glfwInit()) {
+    fprintf( stderr, "Failed to initialize GLFW\n" );
+    getchar();
+    return -1;
+  }
 
-  glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGB);
-  glutInitWindowSize(500, 500);
-  glutInitWindowPosition(100, 100);
-  glutCreateWindow("Visualizando modelo");
-  glutDisplayFunc(drawScene);
-  glutReshapeFunc(resize);
-  glutKeyboardFunc(keyInput);
+  glfwWindowHint(GLFW_SAMPLES, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  glewExperimental = GL_TRUE;
-  glewInit();
+  // Open a window and create its OpenGL context
+	window = glfwCreateWindow(500, 500, "Visualizando modelo", NULL, NULL);
+	if (window == nullptr) {
+    std::cout << "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n";
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
 
-  setup();
+  // Initialize GLEW
+	glewExperimental = true; // Needed for core profile
+	if (glewInit() != GLEW_OK) {
+		std::cout << "Failed to initialize GLEW\n";
+		glfwTerminate();
+		return -1;
+	}
+
+  // glutInit(&argc, argv);
+
+  // // glutInitContextVersion(4, 3);
+  // glutInitContextProfile(GLUT_COMPATIBILITY_PROFILE);
+
+  // glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGB);
+  // glutInitWindowSize(500, 500);
+  // glutInitWindowPosition(100, 100);
+  // glutCreateWindow("Visualizando modelo");
+  // glutDisplayFunc(drawScene);
+  // glutReshapeFunc(resize);
+  // glutKeyboardFunc(keyboard);
+
+  
+  glfwSetKeyCallback(window, keyboard);
+  glfwSetFramebufferSizeCallback(window, resize);
+  resize(window, 500, 500);
 
   // Display OpenGL version information
   int major, minor;
@@ -398,7 +447,15 @@ int main(int argc, char **argv) {
   printf("OpenGL Version: %d.%d\n", major, minor);
   printf("GLSL Version: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-  glutMainLoop();
+  setup();
+
+  while (!glfwWindowShouldClose(window)) {
+    drawScene();
+    glfwPollEvents();
+    glfwSwapBuffers(window);
+  }
+
+  // glutMainLoop();
   return 0;
 }
 

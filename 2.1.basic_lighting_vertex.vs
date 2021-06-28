@@ -10,7 +10,7 @@ uniform vec3 lightPos;
 uniform vec3 lightColor;
 uniform vec3 objectColor;
 
-out vec3 VextexColor;
+out vec3 VertexColor;
 
 void main() {
     vec3 FragPos  = vec3(model * vec4(aPos, 1.0));
@@ -28,5 +28,5 @@ void main() {
     float diff    = clamp(dot(norm, lightDir), 0, 1);
     vec3 diffuse  = diff * lightColor;
 
-    VextexColor   = (ambient + diffuse) * objectColor;
+    VertexColor   = (ambient + diffuse) * objectColor;
 }
