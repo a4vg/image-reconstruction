@@ -33,6 +33,12 @@ float verticalAngle = 0.0f;
 // Initial Field of View
 float initialFoV = 45.0f;
 
+float modelAngX = 0.0f;
+float modelAngY = 0.0f;
+float modelAngZ = 0.0f;
+
+float modelScale = 1.0f;
+
 float speed = 3.0f; // 3 units / second
 float mouseSpeed = 0.005f;
 
@@ -46,17 +52,6 @@ void computeMatricesFromInputs(){
 	// Compute time difference between current and last frame
 	double currentTime = glfwGetTime();
 	float deltaTime = float(currentTime - lastTime);
-
-	// Get mouse position
-	double xpos, ypos;
-	glfwGetCursorPos(window, &xpos, &ypos);
-
-	// Reset mouse position for next frame
-	glfwSetCursorPos(window, 1024/2, 768/2);
-
-	// Compute new orientation
-	horizontalAngle += mouseSpeed * float(1024/2 - xpos );
-	verticalAngle   += mouseSpeed * float( 768/2 - ypos );
 
 	// Direction : Spherical coordinates to Cartesian coordinates conversion
 	glm::vec3 direction(
@@ -95,48 +90,75 @@ void computeMatricesFromInputs(){
 		position -= right * deltaTime * speed;
 	}
 	// Move up
-	// if (glfwGetKey( window, GLFW_KEY_UP ) == GLFW_PRESS){
-	// 	position += up * deltaTime * speed;
-	// }
+	if (glfwGetKey( window, GLFW_KEY_UP ) == GLFW_PRESS){
+		position += up * deltaTime * speed;
+	}
 	// // Move down
-	// if (glfwGetKey( window, GLFW_KEY_DOWN ) == GLFW_PRESS){
-	// 	position -= up * deltaTime * speed;
-	// }
+	if (glfwGetKey( window, GLFW_KEY_DOWN ) == GLFW_PRESS){
+		position -= up * deltaTime * speed;
+	}
 
 	/**
 	 * Rotate
 	 **/
-	// Move right
-	// if (glfwGetKey( window, GLFW_KEY_RIGHT ) == GLFW_PRESS){
-	// 	position += right * deltaTime * speed;
-	// }
-	// // Move left
-	// if (glfwGetKey( window, GLFW_KEY_LEFT ) == GLFW_PRESS){
-	// 	position -= right * deltaTime * speed;
-	// }
+	// Rotate up
+	if (glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS){
+		modelAngY -= 20.0*deltaTime*speed;
+	}
+	// Rotate down
+	if (glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS){
+		modelAngY += 20.0*deltaTime*speed;
+	}
+	// Rotate left
+	if (glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS){
+		modelAngX -= 20.0*deltaTime*speed;
+	}
+	// Rotate right
+	if (glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS){
+		modelAngX += 20.0*deltaTime*speed;
+	}
+	// Rotate depth
+	if (glfwGetKey( window, GLFW_KEY_E ) == GLFW_PRESS){
+		modelAngZ -= 20.0*deltaTime*speed;
+	}
+	// Rotate depth
+	if (glfwGetKey( window, GLFW_KEY_R ) == GLFW_PRESS){
+		modelAngZ += 20.0*deltaTime*speed;
+	}
 
 	/**
 	 * Scale
 	 **/
-	// Move right
-	// if (glfwGetKey( window, GLFW_KEY_RIGHT ) == GLFW_PRESS){
-	// 	position += right * deltaTime * speed;
-	// }
+	// Increase
+	if (glfwGetKey( window, GLFW_KEY_O  ) == GLFW_PRESS){
+		modelScale += 0.5 * deltaTime * speed;
+	}
+	// Decrease
+	if (glfwGetKey( window, GLFW_KEY_P ) == GLFW_PRESS){
+		modelScale -= 0.5 * deltaTime * speed;
+	}
+
 
 	float FoV = initialFoV;// - 5 * glfwGetMouseWheel(); // Now GLFW 3 requires setting up a callback for this. It's a bit too complicated for this beginner's tutorial, so it's disabled instead.
 
 	// Projection matrix : 45� Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 	ProjectionMatrix = glm::perspective(glm::radians(FoV), 4.0f / 3.0f, 0.1f, 100.0f);
 	// Camera matrix
-	ViewMatrix       = glm::lookAt(
+	ViewMatrix = glm::lookAt(
 								position,           // Camera is here
 								position+direction, // and looks here : at the same position, plus "direction"
 								up                  // Head is up (set to 0,-1,0 to look upside-down)
 						   );
 
+
+	// Model matrix: Rotation
+	ModelMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(modelAngY), glm::vec3(1.0f, 0.0f, 0.0f));
+	ModelMatrix = glm::rotate(ModelMatrix, glm::radians(modelAngX), glm::vec3(0.0f, 1.0f, 0.0f));
+	ModelMatrix = glm::rotate(ModelMatrix, glm::radians(modelAngZ), glm::vec3(0.0f, 0.0f, 1.0f));
+
+	// Model matrix: Scale
+	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(modelScale));
+
 	// For the next frame, the "last time" will be "now"
 	lastTime = currentTime;
-
-	ModelMatrix = glm::mat4(1.0);
-	// glm::rotate(glm::mat4(1.0f), glm::radians(Yangle), glm::vec3(0.0f, 1.0f, 0.0f));
 }
