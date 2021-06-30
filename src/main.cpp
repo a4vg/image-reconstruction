@@ -1,19 +1,18 @@
-// g++ --std=c++11 -w *.cpp -I ../include/ -I ../lib/ -lX11 -o run && ./run
-
-// -lGLEW -lGLUT -lGLFW -framework OpenGL
+// g++ -w *.cpp -lGLEW -lGLUT -lGLFW -framework OpenGL  -o tut
 
 #ifndef MAIN_CPP
 #define MAIN_CPP
 
-#include "Image.h"
+#include "ModelVisualizer.hpp"
 
-int main() {
-  Image image("../data/pacient-1.BMP");
-  image.binarize();
-  image.contours();
+int main(int argc, char const *argv[])
+{
+  ModelVisualizer mv = ModelVisualizer(colors::blue, "../shaders/StandardShading.vertexshader", "../shaders/StandardShading.fragmentshader");
 
-  image.show();
-  image.save("../output/pacient.BMP");
+  // mv.addModel("../models/horse.ply");
+  mv.addModel("../models/cow.ply");
+  mv.visualize();
+  
   return 0;
 }
 
