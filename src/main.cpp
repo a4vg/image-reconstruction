@@ -1,9 +1,8 @@
-// g++ -w *.cpp -lGLEW -lGLUT -lGLFW -framework OpenGL  -o tut
+// g++ --std=c++11 -w *.cpp -lGLEW -lGLUT -lGLFW -framework OpenGL  -o run && ./run
 
 #ifndef MAIN_CPP
 #define MAIN_CPP
 
-// #include "ModelVisualizer.hpp"
 #include "ModelVisualizer.hpp"
 #include "Colors.cpp"
 

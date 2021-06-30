@@ -18,6 +18,8 @@ using namespace glm;
 
 ModelVisualizer::ModelVisualizer(glm::vec3 bgcolor)
 {
+	instructions();
+
 	// Initialise GLFW
 	if( !glfwInit() )
 	{
@@ -312,4 +314,15 @@ void ModelVisualizer::computeMatricesFromInputs() {
 
 
 	lastTime = currentTime;
+}
+
+void ModelVisualizer::instructions() {
+	printf("\n************ Instructions ************");
+	printf("\n*  Move camera: arrows               *");
+	printf("\n*  Move model: [j][i][k][l]          *");
+	printf("\n*  Rotate model: [a][w][s][d]        *");
+	printf("\n*  Scale model: [n][m]               *");
+	printf("\n*  Switch to next model: [z]         *");
+	printf("\n*  Quit: [Esc]                       *");
+	printf("\n**************************************\n\n");
 }

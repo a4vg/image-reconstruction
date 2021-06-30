@@ -45,9 +45,11 @@ private:
   float speed = 3.0f; // 3 units / second
   double lastPressZ = glfwGetTime();
   double lastTime = glfwGetTime();
+
+  void computeMatricesFromInputs();
+  void instructions();
 public:
   void visualize();
-  void computeMatricesFromInputs();
   void addModel(const char* ply_file, glm::vec3 color, int specular);
   
   ModelVisualizer(glm::vec3 bgcolor);
