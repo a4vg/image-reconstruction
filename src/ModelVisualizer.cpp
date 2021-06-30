@@ -125,11 +125,12 @@ void ModelVisualizer::visualize() {
 		glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
 
 		for (auto& model: models) {
-			models[cur_model]->computeMatrices();
-			models[cur_model]->MVP = ProjectionMatrix * ViewMatrix * models[cur_model]->ModelMatrix;
-			glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &models[cur_model]->MVP[0][0]);
-			glUniformMatrix4fv(models[cur_model]->ModelMatrixID, 1, GL_FALSE, &models[cur_model]->ModelMatrix[0][0]);
+			model->computeMatrices();
+			model->MVP = ProjectionMatrix * ViewMatrix * model->ModelMatrix;
+			glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &model->MVP[0][0]);
+			glUniformMatrix4fv(model->ModelMatrixID, 1, GL_FALSE, &model->ModelMatrix[0][0]);
 			glUniform3fv(BaseColorID, 1, &model->color[0]);
+			// glUniform1d(WithSpecularID, model->specular);
 
 			// 1rst attribute buffer : vertices
 			glEnableVertexAttribArray(0);
@@ -169,7 +170,6 @@ void ModelVisualizer::visualize() {
 		// Swap buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();
-
 	} // Check if the ESC key was pressed or the window was closed
 	while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
 		   glfwWindowShouldClose(window) == 0 );
