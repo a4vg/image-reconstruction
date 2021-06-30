@@ -16,7 +16,7 @@ using namespace glm;
 #include "Shader.hpp"
 #include "ModelVisualizer.hpp"
 
-ModelVisualizer::ModelVisualizer()
+ModelVisualizer::ModelVisualizer(glm::vec3 bgcolor)
 {
 	// Initialise GLFW
 	if( !glfwInit() )
@@ -64,7 +64,7 @@ ModelVisualizer::ModelVisualizer()
 	glBindVertexArray(VertexArrayID);
 
 	// Dark blue background
-	glClearColor(0.0f, 1.0f, 0.4f, 0.0f);
+	glClearColor(bgcolor[0], bgcolor[1], bgcolor[2], 0.0f);
 
 	// Create and compile our GLSL program from the shaders 
 	programID = Shader::load( "../shaders/StandardShading.vertexshader", "../shaders/StandardShading.fragmentshader" );
@@ -76,11 +76,12 @@ ModelVisualizer::ModelVisualizer()
 
 	LightID = glGetUniformLocation(programID, "LightPosition_worldspace");
 	BaseColorID = glGetUniformLocation(programID, "base_color");
+	WithSpecularID = glGetUniformLocation(programID, "with_specular");
 }
 
-void ModelVisualizer::addModel(const char* ply_file, glm::vec3 color) {
+void ModelVisualizer::addModel(const char* ply_file, glm::vec3 color, int specular) {
 	cur_model = 0;
-	std::shared_ptr<Model> model = std::make_shared<Model>(color);
+	std::shared_ptr<Model> model = std::make_shared<Model>(color, specular);
 	model->ModelMatrixID = glGetUniformLocation(programID, "M");
 
   // Read our .ply file
@@ -130,7 +131,7 @@ void ModelVisualizer::visualize() {
 			glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &model->MVP[0][0]);
 			glUniformMatrix4fv(model->ModelMatrixID, 1, GL_FALSE, &model->ModelMatrix[0][0]);
 			glUniform3fv(BaseColorID, 1, &model->color[0]);
-			// glUniform1d(WithSpecularID, model->specular);
+			glUniform1d(WithSpecularID, model->specular);
 
 			// 1rst attribute buffer : vertices
 			glEnableVertexAttribArray(0);

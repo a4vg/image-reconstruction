@@ -9,16 +9,10 @@
 
 int main(int argc, char const *argv[])
 {
-  // ModelVisualizer mv = ModelVisualizer(colors::blue, "../shaders/StandardShading.vertexshader", "../shaders/StandardShading.fragmentshader");
-
-  // // mv.addModel("../models/horse.ply");
-  // mv.addModel("../models/cow.ply");
-  // mv.visualize();
-
-  ModelVisualizer test;
-  test.addModel("../models/horse.ply", colors::red);
-  test.addModel("../models/cow.ply", colors::blue);
-  test.visualize();
+  ModelVisualizer mv(colors::brown);
+  mv.addModel("../models/horse.ply", colors::red, 1); // with specular
+  mv.addModel("../models/cow.ply", colors::blue, 0); // only diffuse
+  mv.visualize();
   
   return 0;
 }

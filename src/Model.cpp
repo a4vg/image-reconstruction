@@ -11,8 +11,8 @@ using namespace glm;
 
 int Model::count = 0;
 
-Model::Model(glm::vec3 color)
-:color(color) {}
+Model::Model(glm::vec3 color, int spec)
+: color(color), specular(spec) {}
 
 Model::~Model()
 {

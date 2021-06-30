@@ -24,6 +24,7 @@ private:
   GLuint MatrixID;
   GLuint LightID;
   GLuint BaseColorID;
+  GLuint WithSpecularID;
 
   unsigned int cur_model;
   std::vector<std::shared_ptr<Model> > models;
@@ -47,8 +48,8 @@ private:
 public:
   void visualize();
   void computeMatricesFromInputs();
-  void addModel(const char* ply_file, glm::vec3 color);
+  void addModel(const char* ply_file, glm::vec3 color, int specular);
   
-  ModelVisualizer();
+  ModelVisualizer(glm::vec3 bgcolor);
   ~ModelVisualizer();
 };

@@ -14,6 +14,7 @@ uniform sampler2D myTextureSampler;
 uniform mat4 MV;
 uniform vec3 LightPosition_worldspace;
 uniform vec3 base_color;
+uniform bool with_specular;
 
 void main(){
 
@@ -55,8 +56,9 @@ void main(){
 		// Ambient : simulates indirect lighting
 		MaterialAmbientColor +
 		// Diffuse : "color" of the object
-		MaterialDiffuseColor * LightColor * LightPower * cosTheta / (distance*distance) +
+		MaterialDiffuseColor * LightColor * LightPower * cosTheta / (distance*distance);
 		// Specular : reflective highlight, like a mirror
-		MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha,5) / (distance*distance);
+	if (with_specular)
+		color += MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha,5) / (distance*distance);
 
 }

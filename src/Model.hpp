@@ -29,12 +29,13 @@ private:
   float modelScale = 1.0f;
 
   glm::vec3 color;
+  int specular;
 
   void computeMatrices();
 
   friend class ModelVisualizer;
 public:
-  Model(glm::vec3 color);
+  Model(glm::vec3 color, int spec);
   ~Model();
 
   bool loadPLY(const char * path);
