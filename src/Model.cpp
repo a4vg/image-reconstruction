@@ -1,35 +1,26 @@
-#ifndef MODEL_CPP
-#define MODEL_CPP
-
 #include <vector>
 #include <stdio.h>
 #include <string>
 #include <cstring>
 
-#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 using namespace glm;
 
 #include "Model.hpp"
 
-Model::Model(const char* ply_file, GLuint programId)
-: programId(programId), position(glm::vec3( 0, 0, 5 )), angX(0.0f), angY(0.0f), angZ(0.0f), scale(1.0f){
-  // Get a handle for our "MVP" uniform
-  MatrixID = glGetUniformLocation(programId, "MVP");
-  ModelMatrixID = glGetUniformLocation(programId, "M");
+int Model::count = 0;
 
-	printf("Program id: %d\n", programId);
+Model::Model(glm::vec3 color)
+:color(color) {}
 
-  loadPLY(ply_file);
-}
-
-Model::~Model() {
+Model::~Model()
+{
   glDeleteBuffers(1, &vertexbuffer);
 	glDeleteBuffers(1, &normalbuffer);
 }
 
-bool Model::loadPLY(const char * path) {
+bool Model::loadPLY(const char * path){
 	printf("Loading OBJ file %s...\n", path);
 
 	std::vector<unsigned int> indices;
@@ -98,70 +89,17 @@ bool Model::loadPLY(const char * path) {
 		vertices.push_back(vertex);
 		normals.push_back(normal);
 	}
-
-  //  Load into a VBO
-	glGenBuffers(1, &vertexbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
-
-	glGenBuffers(1, &normalbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
-	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);
-
 	return true;
 }
 
-void Model::computeMatrices(glm::mat4& projectionMatrix, glm::mat4& viewMatrix) {
+void Model::computeMatrices() {
   // Model matrix: Rotation
-	modelMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(angY), glm::vec3(1.0f, 0.0f, 0.0f));
-	modelMatrix = glm::rotate(modelMatrix, glm::radians(angX), glm::vec3(0.0f, 1.0f, 0.0f));
-	modelMatrix = glm::rotate(modelMatrix, glm::radians(angZ), glm::vec3(0.0f, 0.0f, 1.0f));
+    ModelMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(modelAngY), glm::vec3(1.0f, 0.0f, 0.0f));
+    ModelMatrix = glm::rotate(ModelMatrix, glm::radians(modelAngX), glm::vec3(0.0f, 1.0f, 0.0f));
+    ModelMatrix = glm::rotate(ModelMatrix, glm::radians(modelAngZ), glm::vec3(0.0f, 0.0f, 1.0f));
 
-	// Model matrix: Scale
-	modelMatrix = glm::scale(modelMatrix, glm::vec3(scale));
-	MVP = projectionMatrix * viewMatrix * modelMatrix;
+    ModelMatrix = glm::translate(ModelMatrix, glm::vec3(modelPosX, modelPosY, 0.0f));
 
-	for (int f=0; f<4; ++f) {
-			for (int c=0; c<4; ++c)
-				printf("%f ", MVP[f][c]);
-			printf("\n");}
-			printf("\n");
-
-  // Send our transformation to the currently bound shader
-  glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
-  glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &modelMatrix[0][0]);
-}
-
-void Model::draw() {
-  // 1rst attribute buffer : vertices
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	glVertexAttribPointer(
-		0,                  // attribute
-		3,                  // size
-		GL_FLOAT,           // type
-		GL_FALSE,           // normalized?
-		0,                  // stride
-		(void*)0            // array buffer offset
-	);
-
-	// 2nd attribute buffer : normals
-	glEnableVertexAttribArray(1);
-	glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
-	glVertexAttribPointer(
-		1,                                // attribute
-		3,                                // size
-		GL_FLOAT,                         // type
-		GL_FALSE,                         // normalized?
-		0,                                // stride
-		(void*)0                          // array buffer offset
-	);
-
-	// Draw the triangles !
-	glDrawArrays(GL_TRIANGLES, 0, vertices.size() );
-
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
-}
-
-#endif // MODEL_CPP
+    // Model matrix: Scale
+    ModelMatrix = glm::scale(ModelMatrix, glm::vec3(modelScale));
+  }

@@ -1,40 +1,41 @@
-#ifndef MODEL_HPP
-#define MODEL_HPP
-
 #include <vector>
+#include <GL/glew.h>
+#include <glm/glm.hpp>
 
-class Model {
+#include "Colors.cpp"
+
+class Model
+{
 private:
-  static const float horizontalAngle = 3.14f; // Initial horizontal angle : toward -Z
-  static const float verticalAngle = 0.0f; // Initial vertical angle : none
-  GLuint programId;
+  static int count;
 
   std::vector<glm::vec3> vertices;
-  std::vector<glm::vec3> normals;
-
-  glm::vec3 position;
-  float angX;
-  float angY;
-  float angZ;
-
-  float scale;
-
-	glm::mat4 modelMatrix;
-	glm::mat4 MVP;
-  GLuint MatrixID;
-  GLuint ModelMatrixID;
+	std::vector<glm::vec3> normals;
 
   GLuint vertexbuffer;
   GLuint normalbuffer;
 
-  bool loadPLY(const char* path);
-  void computeMatrices(glm::mat4& projectionMatrix, glm::mat4& viewMatrix);
-  void draw();
+  GLuint ModelMatrixID;
+  glm::mat4 ModelMatrix;
+  glm::mat4 MVP;
+  
+  float modelAngX = 0.0f;
+  float modelAngY = 0.0f;
+  float modelAngZ = 0.0f;
+
+  float modelPosX = 0.0f;
+  float modelPosY = 0.0f;
+
+  float modelScale = 1.0f;
+
+  glm::vec3 color;
+
+  void computeMatrices();
 
   friend class ModelVisualizer;
 public:
-  Model(const char* ply_file, GLuint programId);
+  Model(glm::vec3 color);
   ~Model();
-};
 
-#endif // MODEL_HPP
+  bool loadPLY(const char * path);
+};

@@ -1,56 +1,26 @@
-#ifndef MODELVISUALIZER_CPP
-#define MODELVISUALIZER_CPP
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
 
+// Include GLEW
 #include <GL/glew.h>
+
+// Include GLFW
+#include <GLFW/glfw3.h>
+
+// Include GLM
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 using namespace glm;
 
-#include "Colors.cpp"
 #include "Shader.hpp"
-
-using namespace std;
-
 #include "ModelVisualizer.hpp"
 
-ModelVisualizer::ModelVisualizer(Color bgcolor, const char* vertex_shader, const char* fragment_shader) {
-  init();
-	// Set bg color
-  glClearColor(bgcolor.r, bgcolor.g, bgcolor.b, 0.0f);
-
-	programId = Shader::load(vertex_shader, fragment_shader);
-
-	ViewMatrixID = glGetUniformLocation(programId, "V");
-
-	glUseProgram(programId);
-	LightID = glGetUniformLocation(programId, "LightPosition_worldspace");
-
-	printf("Program id: %d\n", programId);
-}
-
-ModelVisualizer::~ModelVisualizer() {
-	glDeleteProgram(programId);
-	glDeleteVertexArrays(1, &VertexArrayID);
-
-	// Close OpenGL window and terminate GLFW
-	glfwTerminate();
-
-	printf("Program id: %d\n", programId);
-}
-
-void ModelVisualizer::addModel(const char* ply_file) {
-	curModelIdx = 0;
-	models.push_back(Model(ply_file, programId));
-	printf("Program id: %d\n", programId);
-};
-
-void ModelVisualizer::init() {
-  // Initialise GLFW
-	if(!glfwInit()) {
+ModelVisualizer::ModelVisualizer()
+{
+	// Initialise GLFW
+	if( !glfwInit() )
+	{
 		fprintf( stderr, "Failed to initialize GLFW\n" );
 		getchar();
 		return;
@@ -62,9 +32,8 @@ void ModelVisualizer::init() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-
-	// Open a window and create its OpenGL context
-	window = glfwCreateWindow( 1024, 768, "Model Visualizer", NULL, NULL);
+	// Open a window and create its OpenGL context`
+	window = glfwCreateWindow( 1024, 768, "Tutorial 08 - Basic Shading", NULL, NULL);
 	if( window == NULL ){
 		fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
 		getchar();
@@ -90,62 +59,190 @@ void ModelVisualizer::init() {
 	// Accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS);
 
-  // VAO
-  glGenVertexArrays(1, &VertexArrayID);
-  glBindVertexArray(VertexArrayID);
+	//GLuint VertexArrayID;
+	glGenVertexArrays(1, &VertexArrayID);
+	glBindVertexArray(VertexArrayID);
+
+	// Dark blue background
+	glClearColor(0.0f, 1.0f, 0.4f, 0.0f);
+
+	// Create and compile our GLSL program from the shaders 
+	programID = Shader::load( "../shaders/StandardShading.vertexshader", "../shaders/StandardShading.fragmentshader" );
+	glUseProgram(programID);
+
+	// Get a handle for our "MVP" uniform
+	ViewMatrixID = glGetUniformLocation(programID, "V");
+	MatrixID = glGetUniformLocation(programID, "MVP");
+
+	LightID = glGetUniformLocation(programID, "LightPosition_worldspace");
+	BaseColorID = glGetUniformLocation(programID, "base_color");
 }
 
-void ModelVisualizer::computeInputs(){
-  // glfwGetTime is called only once, the first time this function is called
-	static double lastTime = glfwGetTime();
+void ModelVisualizer::addModel(const char* ply_file, glm::vec3 color) {
+	cur_model = 0;
+	std::shared_ptr<Model> model = std::make_shared<Model>(color);
+	model->ModelMatrixID = glGetUniformLocation(programID, "M");
 
+  // Read our .ply file
+  model->loadPLY(ply_file);
+
+  // Load it into a VBO
+  glGenBuffers(1, &model->vertexbuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, model->vertexbuffer);
+  glBufferData(GL_ARRAY_BUFFER, model->vertices.size() * sizeof(glm::vec3), &model->vertices[0], GL_STATIC_DRAW);
+
+  glGenBuffers(1, &model->normalbuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, model->normalbuffer);
+  glBufferData(GL_ARRAY_BUFFER, model->normals.size() * sizeof(glm::vec3), &model->normals[0], GL_STATIC_DRAW);
+	models.push_back(model);
+}
+
+ModelVisualizer::~ModelVisualizer()
+{
+
+  // Cleanup VBO and shader
+	glDeleteProgram(programID);
+	glDeleteVertexArrays(1, &VertexArrayID);
+
+	// Close OpenGL window and terminate GLFW
+	glfwTerminate();
+}
+
+
+void ModelVisualizer::visualize() {
+	do{
+
+		// Clear the screen
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// Use our shader
+		glUseProgram(programID);
+
+		// Compute the MVP matrix from keyboard input
+		computeMatricesFromInputs();
+
+		glm::vec3 lightPos = glm::vec3(4,4,4);
+		glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
+
+		for (auto& model: models) {
+			models[cur_model]->computeMatrices();
+			models[cur_model]->MVP = ProjectionMatrix * ViewMatrix * models[cur_model]->ModelMatrix;
+			glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &models[cur_model]->MVP[0][0]);
+			glUniformMatrix4fv(models[cur_model]->ModelMatrixID, 1, GL_FALSE, &models[cur_model]->ModelMatrix[0][0]);
+			glUniform3fv(BaseColorID, 1, &model->color[0]);
+
+			// 1rst attribute buffer : vertices
+			glEnableVertexAttribArray(0);
+			glBindBuffer(GL_ARRAY_BUFFER, model->vertexbuffer);
+			glVertexAttribPointer(
+				0,                  // attribute
+				3,                  // size
+				GL_FLOAT,           // type
+				GL_FALSE,           // normalized?
+				0,                  // stride
+				(void*)0            // array buffer offset
+			);
+
+			// 2nd attribute buffer : normals
+			glEnableVertexAttribArray(1);
+			glBindBuffer(GL_ARRAY_BUFFER, model->normalbuffer);
+			glVertexAttribPointer(
+				1,                                // attribute
+				3,                                // size
+				GL_FLOAT,                         // type
+				GL_FALSE,                         // normalized?
+				0,                                // stride
+				(void*)0                          // array buffer offset
+			);
+
+			// Draw the triangles !
+			glDrawArrays(GL_TRIANGLES, 0, model->vertices.size() );
+
+			glDisableVertexAttribArray(0);
+			glDisableVertexAttribArray(1);
+		}
+
+		// Send our transformation to the currently bound shader, 
+		// in the "MVP" uniform
+		glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
+
+		// Swap buffers
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+
+	} // Check if the ESC key was pressed or the window was closed
+	while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
+		   glfwWindowShouldClose(window) == 0 );
+}
+
+void ModelVisualizer::computeMatricesFromInputs() {
 	// Compute time difference between current and last frame
 	double currentTime = glfwGetTime();
 	float deltaTime = float(currentTime - lastTime);
 
 	// Direction : Spherical coordinates to Cartesian coordinates conversion
 	glm::vec3 direction(
-		cos(models[curModelIdx].verticalAngle) * sin(models[curModelIdx].horizontalAngle), 
-		sin(models[curModelIdx].verticalAngle),
-		cos(models[curModelIdx].verticalAngle) * cos(models[curModelIdx].horizontalAngle)
+		cos(verticalAngle) * sin(horizontalAngle), 
+		sin(verticalAngle),
+		cos(verticalAngle) * cos(horizontalAngle)
 	);
 	
 	// Right vector
 	glm::vec3 right = glm::vec3(
-		sin(models[curModelIdx].horizontalAngle - 3.14f/2.0f), 
+		sin(horizontalAngle - 3.14f/2.0f), 
 		0,
-		cos(models[curModelIdx].horizontalAngle - 3.14f/2.0f)
+		cos(horizontalAngle - 3.14f/2.0f)
 	);
 	
 	// Up vector
 	glm::vec3 up = glm::cross( right, direction );
 
 	/**
-	 * Move
+	 * Move camera
 	 **/
 	// Move forward
 	if (glfwGetKey( window, GLFW_KEY_M ) == GLFW_PRESS){
-		models[curModelIdx].position += direction * deltaTime * speed;
+		position += direction * deltaTime * speed;
 	}
 	// Move backward
 	if (glfwGetKey( window, GLFW_KEY_N ) == GLFW_PRESS){
-		models[curModelIdx].position -= direction * deltaTime * speed;
+		position -= direction * deltaTime * speed;
 	}
 	// Move right
 	if (glfwGetKey( window, GLFW_KEY_RIGHT ) == GLFW_PRESS){
-		models[curModelIdx].position += right * deltaTime * speed;
+		position += right * deltaTime * speed;
 	}
 	// Move left
 	if (glfwGetKey( window, GLFW_KEY_LEFT ) == GLFW_PRESS){
-		models[curModelIdx].position -= right * deltaTime * speed;
+		position -= right * deltaTime * speed;
 	}
 	// Move up
 	if (glfwGetKey( window, GLFW_KEY_UP ) == GLFW_PRESS){
-		models[curModelIdx].position += up * deltaTime * speed;
+		position += up * deltaTime * speed;
 	}
 	// // Move down
 	if (glfwGetKey( window, GLFW_KEY_DOWN ) == GLFW_PRESS){
-		models[curModelIdx].position -= up * deltaTime * speed;
+		position -= up * deltaTime * speed;
+	}
+
+	/**
+	 * Move model
+	 **/
+	// Move up
+	if (glfwGetKey( window, GLFW_KEY_I ) == GLFW_PRESS){
+		models[cur_model]->modelPosY +=  deltaTime * speed;
+	}
+	// Move down
+	if (glfwGetKey( window, GLFW_KEY_K ) == GLFW_PRESS){
+		models[cur_model]->modelPosY -= deltaTime * speed;
+	}
+	// Move right
+	if (glfwGetKey( window, GLFW_KEY_L ) == GLFW_PRESS){
+		models[cur_model]->modelPosX += deltaTime * speed;
+	}
+	// Move left
+	if (glfwGetKey( window, GLFW_KEY_J ) == GLFW_PRESS){
+		models[cur_model]->modelPosX -= deltaTime * speed;
 	}
 
 	/**
@@ -153,27 +250,27 @@ void ModelVisualizer::computeInputs(){
 	 **/
 	// Rotate up
 	if (glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS){
-		models[curModelIdx].angY -= 20.0*deltaTime*speed;
+		models[cur_model]->modelAngY -= 20.0*deltaTime*speed;
 	}
 	// Rotate down
 	if (glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS){
-		models[curModelIdx].angY += 20.0*deltaTime*speed;
+		models[cur_model]->modelAngY += 20.0*deltaTime*speed;
 	}
 	// Rotate left
 	if (glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS){
-		models[curModelIdx].angX -= 20.0*deltaTime*speed;
+		models[cur_model]->modelAngX -= 20.0*deltaTime*speed;
 	}
 	// Rotate right
 	if (glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS){
-		models[curModelIdx].angX += 20.0*deltaTime*speed;
+		models[cur_model]->modelAngX += 20.0*deltaTime*speed;
 	}
 	// Rotate depth
 	if (glfwGetKey( window, GLFW_KEY_E ) == GLFW_PRESS){
-		models[curModelIdx].angZ -= 20.0*deltaTime*speed;
+		models[cur_model]->modelAngZ -= 20.0*deltaTime*speed;
 	}
 	// Rotate depth
 	if (glfwGetKey( window, GLFW_KEY_R ) == GLFW_PRESS){
-		models[curModelIdx].angZ += 20.0*deltaTime*speed;
+		models[cur_model]->modelAngZ += 20.0*deltaTime*speed;
 	}
 
 	/**
@@ -181,62 +278,37 @@ void ModelVisualizer::computeInputs(){
 	 **/
 	// Increase
 	if (glfwGetKey( window, GLFW_KEY_O  ) == GLFW_PRESS){
-		models[curModelIdx].scale += 0.5 * deltaTime * speed;
+		models[cur_model]->modelScale += 0.5 * deltaTime * speed;
 	}
 	// Decrease
 	if (glfwGetKey( window, GLFW_KEY_P ) == GLFW_PRESS){
-		models[curModelIdx].scale -= 0.5 * deltaTime * speed;
+		models[cur_model]->modelScale -= 0.5 * deltaTime * speed;
 	}
 
 	/**
 	 * Change current model
 	 **/
-	if (glfwGetKey( window, GLFW_KEY_N ) == GLFW_PRESS){
-		curModelIdx = (curModelIdx+1)%models.size();
-		printf("Down\n");
+	if (glfwGetKey( window, GLFW_KEY_Z ) == GLFW_PRESS){
+		if (currentTime-lastPressZ>0.5) {
+			cur_model = (cur_model+1)%models.size();
+			printf("Next: %d\n", cur_model);
+			lastPressZ = currentTime;
+		}
 	}
 
 
-	float FoV = initialFoV;
+	float FoV = initialFoV;// - 5 * glfwGetMouseWheel(); // Now GLFW 3 requires setting up a callback for this. It's a bit too complicated for this beginner's tutorial, so it's disabled instead.
 
 	// Projection matrix : 45� Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-	projectionMatrix = glm::perspective(glm::radians(FoV), 4.0f / 3.0f, 0.1f, 100.0f);
+	ProjectionMatrix = glm::perspective(glm::radians(FoV), 4.0f / 3.0f, 0.1f, 100.0f);
 	// Camera matrix
-	viewMatrix = glm::lookAt(
-								models[curModelIdx].position,           // Camera is here
-								models[curModelIdx].position+direction, // and looks here : at the same models[curModelIdx].position, plus "direction"
+	ViewMatrix = glm::lookAt(
+								position,           // Camera is here
+								position+direction, // and looks here : at the same position, plus "direction"
 								up                  // Head is up (set to 0,-1,0 to look upside-down)
 						   );
 
-	// For the next frame, the "last time" will be "now"
+
+
 	lastTime = currentTime;
 }
-
-void ModelVisualizer::visualize() {
-	do {
-		// Clear the screen
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glUseProgram(programId);
-		printf("Program id: %d\n", programId);
-		computeInputs();
-
-		for (auto &model: models) model.computeMatrices(projectionMatrix, viewMatrix);
-		
-		// Compute light
-		glm::vec3 lightPos = glm::vec3(4,4,4);
-		glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
-
-		// Send transformation to the currently bound shader
-		glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &viewMatrix[0][0]);
-
-		for (auto &model: models) model.draw();
-
-		// Swap buffers
-		glfwSwapBuffers(window);
-		glfwPollEvents();
-	} // Check if the ESC key was pressed or the window was closed
-	while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
-		   glfwWindowShouldClose(window) == 0 );
-}
-
-#endif // MODELVISUALIZER_CPP

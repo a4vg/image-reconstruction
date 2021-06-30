@@ -19,7 +19,6 @@ using namespace glm;
 #include "common/shader.hpp"
 #include "common/controls.hpp"
 #include "common/plyloader.hpp"
-#include "common/vboindexer.hpp"
 
 int main( void )
 {
@@ -37,7 +36,7 @@ int main( void )
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	// Open a window and create its OpenGL context
+	// Open a window and create its OpenGL context`
 	window = glfwCreateWindow( 1024, 768, "Tutorial 08 - Basic Shading", NULL, NULL);
 	if( window == NULL ){
 		fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
@@ -59,30 +58,35 @@ int main( void )
 	// Ensure we can capture the escape key being pressed below
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
-	// Dark blue background
-	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
-
 	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
 	// Accept fragment if it closer to the camera than the former one
-	glDepthFunc(GL_LESS); 
+	glDepthFunc(GL_LESS);
 
 	GLuint VertexArrayID;
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
 
-	// Create and compile our GLSL program from the shaders
-	GLuint programID = LoadShaders( "StandardShading.vertexshader", "StandardShading.fragmentshader" );
+	// Dark blue background
+	glClearColor(0.0f, 1.0f, 0.4f, 0.0f);
+
+	// Create and compile our GLSL program from the shaders 
+	GLuint programID = LoadShaders( "shaders/StandardShading.vertexshader", "shaders/StandardShading.fragmentshader" );
 
 	// Get a handle for our "MVP" uniform
-	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
 	GLuint ViewMatrixID = glGetUniformLocation(programID, "V");
+	// GLuint MatrixID = glGetUniformLocation(programID, "MVP");
+
+	glUseProgram(programID); // 
+	GLuint LightID = glGetUniformLocation(programID, "LightPosition_worldspace"); //
+
+	GLuint MatrixID = glGetUniformLocation(programID, "MVP"); //
 	GLuint ModelMatrixID = glGetUniformLocation(programID, "M");
 
 	// Read our .obj file
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec3> normals;
-	bool res = loadPLY("cow.ply", vertices, normals);
+	bool res = loadPLY("models/cow.ply", vertices, normals);
 
 	// Load it into a VBO
 
@@ -97,8 +101,8 @@ int main( void )
 	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);
 
 	// Get a handle for our "LightPosition" uniform
-	glUseProgram(programID);
-	GLuint LightID = glGetUniformLocation(programID, "LightPosition_worldspace");
+	// glUseProgram(programID);
+	// GLuint LightID = glGetUniformLocation(programID, "LightPosition_worldspace");
 
 	do{
 
@@ -108,21 +112,34 @@ int main( void )
 		// Use our shader
 		glUseProgram(programID);
 
-		// Compute the MVP matrix from keyboard and mouse input
-		computeMatricesFromInputs();
+		// Compute the MVP matrix from keyboard input
+		computeMatricesFromInputs(window);
+
 		glm::mat4 ProjectionMatrix = getProjectionMatrix();
 		glm::mat4 ViewMatrix = getViewMatrix();
 		glm::mat4 ModelMatrix = getModelMatrix();
 		glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
-		// Send our transformation to the currently bound shader, 
-		// in the "MVP" uniform
+		for (int f=0; f<4; ++f) {
+			for (int c=0; c<4; ++c)
+				printf("%f ", MVP[f][c]);
+			printf("\n");}
+			printf("\n");
+
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
 		glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
-		glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
 
 		glm::vec3 lightPos = glm::vec3(4,4,4);
 		glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
+
+		// Send our transformation to the currently bound shader, 
+		// in the "MVP" uniform
+		// glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+		// glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
+		glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
+
+		// glm::vec3 lightPos = glm::vec3(4,4,4);
+		// glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
 
 		// 1rst attribute buffer : vertices
 		glEnableVertexAttribArray(0);

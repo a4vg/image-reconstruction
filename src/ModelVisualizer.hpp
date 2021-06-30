@@ -1,41 +1,54 @@
-#ifndef MODELVISUALIZER_HPP
-#define MODELVISUALIZER_HPP
+#include <vector>
+#include <memory>
 
+// Include GLEW
+#include <GL/glew.h>
+
+// Include GLFW
 #include <GLFW/glfw3.h>
 
+// Include GLM
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 using namespace glm;
 
 #include "Model.hpp"
-#include "Colors.cpp"
 
-class ModelVisualizer {
+class ModelVisualizer
+{
 private:
   GLFWwindow* window;
   GLuint VertexArrayID;
-  GLuint programId;
-  GLuint LightID;
-
-  const float speed = 3.0f; // 3 units / second
-  const float initialFoV = 45.0f; // Initial Field of View
-
-  glm::mat4 projectionMatrix;
-	glm::mat4 viewMatrix;
+  GLuint programID;
   GLuint ViewMatrixID;
+  GLuint MatrixID;
+  GLuint LightID;
+  GLuint BaseColorID;
 
-  int curModelIdx = -1;
-  std::vector<Model> models;
+  unsigned int cur_model;
+  std::vector<std::shared_ptr<Model> > models;
+  // Model model;
 
-  void init();
-  void computeInputs();
-  void setShader(const char* vertex_shader, const char* fragment_shader);
+  glm::mat4 ProjectionMatrix;
+	glm::mat4 ViewMatrix;
+
+  // Initial position : on +Z
+  glm::vec3 position = glm::vec3( 0, 0, 5 ); 
+  // Initial horizontal angle : toward -Z
+  float horizontalAngle = 3.14f;
+  // Initial vertical angle : none
+  float verticalAngle = 0.0f;
+  // Initial Field of View
+  float initialFoV = 45.0f;
+
+  float speed = 3.0f; // 3 units / second
+  double lastPressZ = glfwGetTime();
+  double lastTime = glfwGetTime();
 public:
-  ModelVisualizer(Color bgcolor, const char* vertex_shader, const char* fragment_shader);
-  ~ModelVisualizer();
-
-  void addModel(const char* ply_file);
   void visualize();
+  void computeMatricesFromInputs();
+  void addModel(const char* ply_file, glm::vec3 color);
+  
+  ModelVisualizer();
+  ~ModelVisualizer();
 };
-
-#endif // MODELVISUALIZER_HPP
