@@ -20,6 +20,7 @@ using namespace glm;
 #include "common/texture.hpp"
 #include "common/controls.hpp"
 #include "common/objloader.hpp"
+#include "common/plyloader.hpp"
 #include "common/vboindexer.hpp"
 
 int main( void )
@@ -83,7 +84,7 @@ int main( void )
 	// Read our .obj file
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec3> normals;
-	bool res = loadOBJ("suzanne.obj", vertices, normals);
+	bool res = loadPLY("cow.ply", vertices, normals);
 
 	// Load it into a VBO
 
@@ -137,11 +138,11 @@ int main( void )
 			(void*)0            // array buffer offset
 		);
 
-		// 3rd attribute buffer : normals
-		glEnableVertexAttribArray(2);
+		// 2nd attribute buffer : normals
+		glEnableVertexAttribArray(1);
 		glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
 		glVertexAttribPointer(
-			2,                                // attribute
+			1,                                // attribute
 			3,                                // size
 			GL_FLOAT,                         // type
 			GL_FALSE,                         // normalized?
@@ -154,7 +155,6 @@ int main( void )
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
-		glDisableVertexAttribArray(2);
 
 		// Swap buffers
 		glfwSwapBuffers(window);
@@ -166,7 +166,6 @@ int main( void )
 
 	// Cleanup VBO and shader
 	glDeleteBuffers(1, &vertexbuffer);
-	// glDeleteBuffers(1, &uvbuffer);
 	glDeleteBuffers(1, &normalbuffer);
 	glDeleteProgram(programID);
 	glDeleteVertexArrays(1, &VertexArrayID);
