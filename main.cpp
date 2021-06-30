@@ -17,9 +17,7 @@ GLFWwindow* window;
 using namespace glm;
 
 #include "common/shader.hpp"
-#include "common/texture.hpp"
 #include "common/controls.hpp"
-#include "common/objloader.hpp"
 #include "common/plyloader.hpp"
 #include "common/vboindexer.hpp"
 
