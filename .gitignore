@@ -1,0 +1,8 @@
+# Files without extension
+*
+!/**/
+!*.*
+
+output/
+data/
+.DS_Store
