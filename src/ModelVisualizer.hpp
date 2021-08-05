@@ -1,4 +1,8 @@
+#ifndef MODELVISUALIZER_HPP
+#define MODELVISUALIZER_HPP
+
 #include <vector>
+#include <string>
 #include <memory>
 
 // Include GLEW
@@ -12,24 +16,21 @@
 #include <glm/gtc/matrix_transform.hpp>
 using namespace glm;
 
-#include "Model.hpp"
+#include "PointCloudModel.hpp"
 
 class ModelVisualizer
 {
 private:
   GLFWwindow* window;
+
+  PointCloudModel* model;
+  
   GLuint VertexArrayID;
   GLuint programID;
   GLuint ViewMatrixID;
   GLuint MatrixID;
-  GLuint LightID;
   GLuint BaseColorID;
-  GLuint WithSpecularID;
-
-  unsigned int cur_model;
-  std::vector<std::shared_ptr<Model> > models;
-  // Model model;
-
+  
   glm::mat4 ProjectionMatrix;
 	glm::mat4 ViewMatrix;
 
@@ -49,9 +50,11 @@ private:
   void computeMatricesFromInputs();
   void instructions();
 public:
+  void init(glm::vec3 bgcolor, PointCloudModel& model);
   void visualize();
-  void addModel(const char* ply_file, glm::vec3 color, int specular);
-  
-  ModelVisualizer(glm::vec3 bgcolor);
+
+  ModelVisualizer(){};
   ~ModelVisualizer();
 };
+
+#endif // MODELVISUALIZER_HPP

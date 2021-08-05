@@ -3,15 +3,17 @@
 #ifndef MAIN_CPP
 #define MAIN_CPP
 
-#include "ModelVisualizer.hpp"
+#include "Reconstructor.hpp"
 #include "Colors.cpp"
 
 int main(int argc, char const *argv[])
 {
-  ModelVisualizer mv(colors::brown);
-  mv.addModel("../models/horse.ply", colors::red, 1); // with specular
-  mv.addModel("../models/cow.ply", colors::blue, 0); // only diffuse
-  mv.visualize();
+  std::string filePattern = "../data/pacient-";
+  std::string ext = "BMP";
+
+  Reconstructor reconstructor(filePattern, ext, 1, 40);
+  reconstructor.visualize(colors::brown);
+
   
   return 0;
 }

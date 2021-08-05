@@ -6,7 +6,8 @@
                 "${default}",
                 "${workspaceFolder}/lib",
                 "${workspaceFolder}/include",
-                "/opt/X11/include"
+                "/opt/X11/include",
+                "/usr/local/include"
             ],
             "defines": [],
             "macFrameworkPath": [],
