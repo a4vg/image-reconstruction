@@ -2,11 +2,10 @@
 Image reconstruction from 2D CT slices.
 
 ## Run
-
 First download CT images (link below) and put in directory "data" (or change path in `main.cpp`)
 ```
-cd src
-g++ --std=c++11 -w *.cpp -I ../lib/ -lX11  -lGLEW -lGLUT -lGLFW -framework OpenGL  -o run && ./run
+# MacOS only
+g++ --std=c++11 -w main.cpp src/*.cpp -I lib/ -I include -lX11  -lGLEW -lGLUT -lGLFW -framework OpenGL  -o run && ./run
 ```
 
 ## CT images
@@ -18,3 +17,4 @@ Available in Google Drive [here](https://drive.google.com/file/d/1Gwc3uNTiqNRa6o
 
 #### Point Cloud
  ![expointcloud](examples/point-cloud.png)
+

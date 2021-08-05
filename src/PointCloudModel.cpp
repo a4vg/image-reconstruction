@@ -36,7 +36,7 @@ void PointCloudModel::loadImage(std::string infile, std::string outfile) {
       }
     }
 
-  img.save(outfile);
+  // img.save(outfile);
 }
 
 void PointCloudModel::computeMatrices() {

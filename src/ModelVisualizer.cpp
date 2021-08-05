@@ -85,7 +85,7 @@ void ModelVisualizer::init(glm::vec3 bgcolor, PointCloudModel& model)
 	glClearColor(bgcolor[0], bgcolor[1], bgcolor[2], 0.0f);
 
 	// Create and compile our GLSL program from the shaders 
-	programID = Shader::load( "../shaders/PointCloud.vs", "../shaders/PointCloud.fs" );
+	programID = Shader::load( "shaders/PointCloud.vs", "shaders/PointCloud.fs" );
 	glUseProgram(programID);
 
 	// Get a handle for our "MVP" uniform

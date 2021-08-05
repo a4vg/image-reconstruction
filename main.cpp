@@ -8,11 +8,11 @@
 
 int main(int argc, char const *argv[])
 {
-  std::string filePattern = "../data/pacient-";
+  std::string filePattern = "data/pacient-";
   std::string ext = "BMP";
 
-  Reconstructor reconstructor(filePattern, ext, 1, 40, colors::red);
-  reconstructor.visualize(colors::brown);
+  Reconstructor reconstructor(filePattern, ext, 1, 40, colors::darkBlue);
+  reconstructor.visualize(colors::white);
 
   return 0;
 }

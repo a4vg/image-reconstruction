@@ -4,7 +4,7 @@ Reconstructor::Reconstructor(std::string filePattern, std::string ext, int from,
 	pointCloudModel.setColor(pointColor);
   for (int i=from; i<=to; ++i) {
     std::string infile = filePattern + std::to_string(i) + "." + ext; 
-    std::string outfile = "../output/out-" + std::to_string(i) + "." + ext; 
+    std::string outfile = "output/out-" + std::to_string(i) + "." + ext; 
     pointCloudModel.loadImage(infile, outfile);
 		pointCloudModel.layerN += 1.0/(to*1.3);
 
