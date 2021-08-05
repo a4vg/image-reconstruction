@@ -90,7 +90,7 @@ void ModelVisualizer::init(glm::vec3 bgcolor, PointCloudModel& model)
 
 	// Get a handle for our "MVP" uniform
 	MatrixID = glGetUniformLocation(programID, "MVP");
-	// BaseColorID = glGetUniformLocation(programID, "color");
+	BaseColorID = glGetUniformLocation(programID, "color");
 }
 
 void ModelVisualizer::visualize() {
@@ -114,7 +114,7 @@ void ModelVisualizer::visualize() {
 
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &model->MVP[0][0]);
 		glUniformMatrix4fv(model->ModelMatrixID, 1, GL_FALSE, &model->ModelMatrix[0][0]);
-		// glUniform3fv(BaseColorID, 1, &model->color[0]);
+		glUniform3fv(BaseColorID, 1, &model->color[0]);
 
 		// Attribute buffer 0 : vertices
 		glEnableVertexAttribArray(0);

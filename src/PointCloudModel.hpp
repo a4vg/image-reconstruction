@@ -40,6 +40,8 @@ public:
   ~PointCloudModel();
 
   void loadImage(std::string infile, std::string outfile);
+
+  void setColor(glm::vec3 color) { this->color = color; };
 };
 
 #endif // POINTCLOUDMODEL_HPP

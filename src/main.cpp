@@ -11,10 +11,9 @@ int main(int argc, char const *argv[])
   std::string filePattern = "../data/pacient-";
   std::string ext = "BMP";
 
-  Reconstructor reconstructor(filePattern, ext, 1, 40);
+  Reconstructor reconstructor(filePattern, ext, 1, 40, colors::red);
   reconstructor.visualize(colors::brown);
 
-  
   return 0;
 }
 

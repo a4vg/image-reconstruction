@@ -23,7 +23,7 @@ private:
   PointCloudModel pointCloudModel;
   
 public:
-  Reconstructor(std::string filePattern, std::string ext, int from, int to);
+  Reconstructor(std::string filePattern, std::string ext, int from, int to, glm::vec3 pointColor);
   ~Reconstructor(){};
 
   static void process(std::string filePattern, std::string ext, int from, int to);
