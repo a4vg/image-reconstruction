@@ -2,6 +2,8 @@
 Image reconstruction from 2D CT slices.
 
 ## Run
+
+First download CT images (link below) and put in directory "data" (or change path in `main.cpp`)
 ```
 cd src
 g++ --std=c++11 -w *.cpp -I ../lib/ -lX11  -lGLEW -lGLUT -lGLFW -framework OpenGL  -o run && ./run
